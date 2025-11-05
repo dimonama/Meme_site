@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Галерея мемів</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #0c0c0c 0%, #1a1a1a 50%, #2d2d2d 100%);
+            min-height: 100vh;
+            color: white;
+        }
+        .meme-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            padding: 20px;
+        }
+        .meme-item {
+            background: rgba(42, 42, 42, 0.9);
+            border: 1px solid #444;
+            border-radius: 15px;
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .meme-item:hover {
+            transform: translateY(-5px);
+            border-color: #666;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+        }
+        .filters, .sorting {
+            text-align: center;
+            padding: 20px;
+        }
+        .filters a, .sorting a {
+            display: inline-block;
+            margin: 0 10px;
+            padding: 10px 20px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+        .filters a:hover, .sorting a:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+        .pagination {
+            text-align: center;
+            padding: 20px;
+        }
+        .pagination a {
+            display: inline-block;
+            margin: 0 5px;
+            padding: 10px 15px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+        }
+        .pagination a:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        .meme-placeholder {
+            width: 100%;
+            height: 200px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            margin-bottom: 10px;
+        }
+        .meme-media {
+            width: 100%;
+            height: 250px;
+            object-fit: cover;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+        .meme-stats {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 10px;
+        }
+        .meme-stats span {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="{% url 'MemeApp:home' %}">Меню</a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link" href="{% url 'MemeApp:upload' %}">📤 Завантажити</a>
+                <a class="nav-link" href="{% url 'MemeApp:home' %}">🏠 Головна</a>
+            </div>
+        </div>
+    </nav>
+
+    <h1 class="text-center mt-4">Галерея мемів</h1>
+
+    <!-- Фільтри -->
+    <div class="filters">
+        <a href="?type=image">🏞️ Фото</a>
+        <a href="?type=video">🎥 Відео</a>
+        <a href="?">Всі</a>
+    </div>
+
+    <!-- Сортування -->
+    <div class="sorting">
+        <a href="?sort=newest">Новіші</a>
+        <a href="?sort=popular">Популярні</a>
+        <a href="?sort=views">Найпопулярніші</a>
+    </div>
+
+    <!-- Меми -->
+    <div class="meme-grid">
+        {% for meme in meme_list %}
+        <div class="meme-item" onclick="location.href='{% url 'MemeApp:meme_detail' pk=meme.id %}';">
+            <h5>{{ meme.title|truncatechars:30 }}</h5>
+            {% if meme.file %}
+                {% if meme.meme_type == 'image' %}
+                    <img src="{{ meme.file.url }}" alt="{{ meme.title }}" class="meme-media">
+                {% else %}
+                    <video class="meme-media">
+                        <source src="{{ meme.file.url }}" type="video/mp4">
+                    </video>
+                {% endif %}
+            {% else %}
+                <div class="meme-placeholder">
+                    {% if meme.meme_type == 'video' %}🎥{% else %}🖼️{% endif %}
+                </div>
+            {% endif %}
+
+            <div class="meme-stats">
+                <span>❤️ {{ meme.total_likes }}</span>
+                <span>👁️ {{ meme.views }}</span>
+            </div>
+
+            <small class="text-muted">Автор: {{ meme.uploaded_by.username }}</small>
+        </div>
+        {% empty %}
+        <div class="meme-item">
+            <p>Меми не знайдені.</p>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Пагінація -->
+    {% if is_paginated %}
+    <div class="pagination">
+        {% if page_obj.has_previous %}
+            <a href="?page={{ page_obj.previous_page_number }}{% if request.GET.type %}&type={{ request.GET.type }}{% endif %}{% if request.GET.sort %}&sort={{ request.GET.sort }}{% endif %}">Попередня</a>
+        {% endif %}
+
+        <span>Сторінка {{ page_obj.number }} з {{ page_obj.paginator.num_pages }}</span>
+
+        {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}{% if request.GET.type %}&type={{ request.GET.type }}{% endif %}{% if request.GET.sort %}&sort={{ request.GET.sort }}{% endif %}">Наступна</a>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    <script>
+    // Автозапуск видео при наведении
+    document.addEventListener('DOMContentLoaded', function() {
+        const videoElements = document.querySelectorAll('video.meme-media');
+
+        videoElements.forEach(video => {
+            video.addEventListener('mouseenter', function() {
+                this.play();
+            });
+
+            video.addEventListener('mouseleave', function() {
+                this.pause();
+                this.currentTime = 0;
+            });
+        });
+    });
+    </script>
+</body>
+</html>
