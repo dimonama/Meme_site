@@ -118,6 +118,31 @@
             border: none;
             border-radius: 10px;
         }
+
+        /* Стили для текста помощи формы */
+        .form-text {
+            color: #ccc !important;
+            font-size: 0.85em;
+            margin-top: 5px;
+            display: block;
+        }
+
+        /* Стили для ошибок формы */
+        .errorlist {
+            color: #ff6b6b !important;
+            font-size: 0.9em;
+            padding-left: 0;
+            list-style: none;
+        }
+
+        .form-label {
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
     </style>
 </head>
 <body>
@@ -139,20 +164,46 @@
                 <div class="auth-card p-4">
                     <h1 class="text-center mb-4">📝 Реєстрація</h1>
 
-                    {% if messages %}
-                        <div class="alert alert-danger">
-                            {% for message in messages %}
-                                <div class="mb-2">{{ message }}</div>
-                            {% endfor %}
-                        </div>
-                    {% endif %}
 
                     <form method="post">
                         {% csrf_token %}
 
-                        {{ form.as_p }}
+                        <!-- Поле имени пользователя -->
+                        <div class="form-group">
+                            <label for="id_username" class="form-label">
+                                <strong>Ім'я користувача:</strong>
+                            </label>
+                            <input type="text" name="username" class="form-control" id="id_username"
+                                   required autocomplete="username">
+                            <small class="form-text">
+                                Обов'язкове поле. Не більше 150 символів. Тільки букви, цифри та символи @/./+/-/_.
+                            </small>
+                        </div>
 
-                        <button type="submit" class="btn btn-primary w-100 py-2 mb-3">Зареєструватися</button>
+                        <!-- Поле пароля -->
+                        <div class="form-group">
+                            <label for="id_password1" class="form-label">
+                                <strong>Пароль:</strong>
+                            </label>
+                            <input type="password" name="password1" class="form-control" id="id_password1"
+                                   required autocomplete="new-password">
+                        </div>
+
+                        <!-- Поле подтверждения пароля -->
+                        <div class="form-group">
+                            <label for="id_password2" class="form-label">
+                                <strong>Підтвердження пароля:</strong>
+                            </label>
+                            <input type="password" name="password2" class="form-control" id="id_password2"
+                                   required autocomplete="new-password">
+                            <small class="form-text">
+                                Введіть той самий пароль, що й раніше, для підтвердження.
+                            </small>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary w-100 py-2 mb-3">
+                            <strong>Зареєструватися</strong>
+                        </button>
 
                         <div class="text-center">
                             <p class="text-white">Вже є акаунт? <a href="{% url 'MemeApp:login' %}" class="text-warning">Увійти</a></p>

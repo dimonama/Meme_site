@@ -21,7 +21,7 @@
             position: fixed;
             top: 50%;
             transform: translateY(-50%);
-            width: 600px;
+            width: 500px;
             height: auto;
             z-index: 5;
         }
@@ -74,30 +74,24 @@
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
         }
 
-        .nav-link {
-            background: rgba(255, 255, 255, 0.1);
-            margin: 5px;
-            border-radius: 8px;
-            transition: all 0.3s ease;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-        }
-
-        .nav-link:hover {
-            background: rgba(255, 255, 255, 0.2);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 15px rgba(255, 255, 255, 0.1);
-        }
-
-        .user-avatar {
-            width: 100px;
-            height: 100px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 2rem;
-            margin: 0 auto;
+.user-avatar {
+    width: 500px;
+    height: auto;
+    border-radius: 50%;
+    margin: 0 auto 200px;
+    border: 4px solid #ffeb3b;
+    box-shadow: 0 0 25px rgba(255, 235, 59, 0.4);
+    overflow: hidden;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 5rem !important;
+}
+        .user-avatar img {
+            width: 300%;
+            height: 300%;
+            object-fit: cover;
         }
 
         .meme-grid {
@@ -144,11 +138,6 @@
             opacity: 1;
         }
 
-        .delete-btn:hover {
-            background: rgba(220, 53, 69, 1);
-            transform: scale(1.1);
-        }
-
         .meme-placeholder {
             width: 100%;
             height: 150px;
@@ -182,11 +171,6 @@
             box-shadow: 0 5px 15px rgba(255, 193, 7, 0.4);
         }
 
-        .profile-nav {
-            margin-bottom: 30px;
-        }
-
-        /* Стилі для кнопок як на головній сторінці */
         .main-buttons {
             display: flex;
             justify-content: center;
@@ -218,45 +202,38 @@
             color: white;
         }
 
-        .checkbox-welcome {
+        .nav-link {
             background: rgba(255, 255, 255, 0.1);
+            margin: 5px;
             border-radius: 8px;
-            padding: 15px;
-            margin: 20px 0;
-            border-left: 4px solid #ffeb3b;
-        }
-
-        /* Стиль для кнопки виходу як на головній */
-        .logout-btn {
-            background: rgba(220, 53, 69, 0.2);
-            border: 1px solid rgba(220, 53, 69, 0.5);
-            border-radius: 8px;
-            padding: 8px 16px;
-            color: #ff6b6b;
-            text-decoration: none;
             transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.2);
         }
 
-        .logout-btn:hover {
-            background: rgba(220, 53, 69, 0.3);
+        .nav-link:hover {
+            background: rgba(255, 255, 255, 0.2);
             transform: translateY(-2px);
-            box-shadow: 0 4px 15px rgba(220, 53, 69, 0.2);
-            color: #ff6b6b;
+            box-shadow: 0 4px 15px rgba(255, 255, 255, 0.1);
         }
     </style>
 </head>
 <body>
+    <!-- Танцюючі Пепе -->
     <img src="https://media.tenor.com/B0BbyOHgHt4AAAAj/pepe-the-frog-dance.gif" alt="Танцюючий Пепе" class="pepe-gif pepe-left">
     <img src="https://media.tenor.com/B0BbyOHgHt4AAAAj/pepe-the-frog-dance.gif" alt="Танцюючий Пепе" class="pepe-gif pepe-right">
+
+    <!-- Фон з зірками -->
     <div class="stars" id="stars"></div>
 
     <nav class="navbar navbar-expand-lg navbar-dark">
         <div class="container">
-            <a class="navbar-brand fw-bold" href="{% url 'MemeApp:home' %}">🎭 MemeSite 🎭</a>
+            <a class="navbar-brand fw-bold" href="{% url 'MemeApp:home' %}">Головна сторінка</a>
 
             <div class="navbar-nav ms-auto">
                 {% if user.is_authenticated %}
-                    <a href="{% url 'MemeApp:profile' %}" class="nav-link px-3 py-2">👤 {{ user.username }}</a>
+<a href="{% url 'MemeApp:profile' %}" class="nav-link px-3 py-2">
+{{ user_profile.avatar_emoji }}
+</a>
                     <a href="{% url 'MemeApp:logout' %}" class="nav-link px-3 py-2 text-danger">🚪 Вийти</a>
                 {% else %}
                     <a href="{% url 'MemeApp:login' %}" class="nav-link px-3 py-2">🔑 Вхід</a>
@@ -270,13 +247,13 @@
         <div class="row justify-content-center">
             <div class="col-md-10">
                 <div class="profile-card p-5 text-center mb-5">
-                    <div class="user-avatar mb-3">
-                        👤
-                    </div>
+                        <div class="current-avatar" id="currentAvatar">
+{{ user_profile.avatar_emoji }}
+                        </div>
                     <h1 class="welcome-text mb-2 text-info">{{ user.username }}</h1>
                     <p class="text-muted">Учасник MemeSite з {{ user.date_joined|date:"d.m.Y" }}</p>
 
-                    <!-- Кнопки як на головній сторінці -->
+                    <!-- Кнопки -->
                     <div class="main-buttons">
                         <a href="{% url 'MemeApp:gallery' %}" class="main-btn">🖼️ Галерея</a>
                         <a href="{% url 'MemeApp:upload' %}" class="main-btn">📤 Завантажити мем</a>
@@ -284,6 +261,7 @@
                         <a href="{% url 'MemeApp:edit_profile' %}" class="main-btn">⚙️ Редагувати профіль</a>
                     </div>
 
+                    <!-- Статистика -->
                     <div class="row mt-4">
                         <div class="col-md-4">
                             <div class="stat-card">

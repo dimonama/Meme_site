@@ -85,6 +85,7 @@ class Meme(models.Model):
 class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, verbose_name="Користувач")
     avatar = models.ImageField(upload_to='avatars/%Y/%m/%d/', blank=True, null=True, verbose_name="Аватар")
+    avatar_emoji = models.CharField(max_length=10, default='👤', verbose_name="Аватар (емодзі)")
     bio = models.TextField(max_length=500, blank=True, verbose_name="Біографія")
     location = models.CharField(max_length=100, blank=True, verbose_name="Місцезнаходження")
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата створення")
@@ -96,9 +97,6 @@ class UserProfile(models.Model):
     def __str__(self):
         return f"Профіль {self.user.username}"
 
-    def create_user_profile(self):
-        return UserProfile.objects.create(user=self.user)
-
     def get_total_memes(self):
         return self.user.meme_set.count()
 
@@ -109,8 +107,6 @@ class UserProfile(models.Model):
         )
         return result['total_likes'] or 0
 
-
-# Функція для створення профілю при реєстрації
 def create_user_profile(sender, instance, created, **kwargs):
     if created:
         UserProfile.objects.get_or_create(user=instance)

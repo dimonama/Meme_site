@@ -12,7 +12,59 @@
             color: white;
             margin: 0;
             padding: 20px;
+            overflow-x: hidden;
+            position: relative;
         }
+
+        /* --- СТИЛІ ДЛЯ ЗІРОК --- */
+        .stars {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+        }
+
+        .star {
+            position: absolute;
+            border-radius: 50%;
+            animation: twinkle linear infinite;
+        }
+
+        @keyframes twinkle {
+            0% { opacity: 0.3; background-color: #ffffff; box-shadow: 0 0 5px #ffffff; }
+            25% { opacity: 0.7; background-color: #fffacd; box-shadow: 0 0 8px #fffacd; }
+            50% { opacity: 1; background-color: #ffeb3b; box-shadow: 0 0 12px #ffeb3b, 0 0 20px #ffeb3b; }
+            75% { opacity: 0.7; background-color: #fffacd; box-shadow: 0 0 8px #fffacd; }
+            100% { opacity: 0.3; background-color: #ffffff; box-shadow: 0 0 5px #ffffff; }
+        }
+
+        /* --- СТИЛІ ДЛЯ ГІФОК З ПЕПЕ --- */
+        .pepe-gif {
+            position: fixed;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 500px;
+            height: auto;
+            z-index: 5;
+        }
+
+        .pepe-left {
+            left: 10px;
+        }
+
+        .pepe-right {
+            right: 10px;
+        }
+
+        @media (max-width: 768px) {
+            .pepe-gif {
+                display: none;
+            }
+        }
+
+        .container { background: transparent; position: relative; z-index: 10; }
 
         .meme-container {
             display: grid;
@@ -27,6 +79,7 @@
             border: 1px solid #444;
             border-radius: 15px;
             padding: 25px;
+            backdrop-filter: blur(5px);
         }
 
         .meme-media {
@@ -49,11 +102,13 @@
             padding: 12px;
             cursor: pointer;
             transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
         }
 
         .related-meme:hover {
             transform: translateY(-5px);
-            border-color: #666;
+            border-color: #ffeb3b;
+            box-shadow: 0 5px 15px rgba(255, 235, 59, 0.2);
         }
 
         .related-media {
@@ -95,6 +150,7 @@
         .like-btn:hover {
             background: #dc3545;
             color: white;
+            transform: translateY(-2px);
         }
 
         .like-btn.liked {
@@ -107,15 +163,53 @@
             padding: 8px 15px;
             border-radius: 20px;
         }
+
+        .nav-link {
+            background: rgba(255, 255, 255, 0.1);
+            margin: 5px;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .nav-link:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(255, 255, 255, 0.1);
+        }
+
+        .user-avatar {
+            font-size: 1.2rem;
+            margin-right: 5px;
+        }
     </style>
 </head>
 <body>
+    <!-- Танцюючі Пепе -->
+    <img src="https://media.tenor.com/B0BbyOHgHt4AAAAj/pepe-the-frog-dance.gif" alt="Танцюючий Пепе" class="pepe-gif pepe-left">
+    <img src="https://media.tenor.com/B0BbyOHgHt4AAAAj/pepe-the-frog-dance.gif" alt="Танцюючий Пепе" class="pepe-gif pepe-right">
+
+    <!-- Фон з зірками -->
+    <div class="stars" id="stars"></div>
+
     <nav class="navbar navbar-expand-lg navbar-dark">
         <div class="container-fluid">
             <a class="navbar-brand fw-bold" href="{% url 'MemeApp:gallery' %}">Галерея</a>
             <div class="navbar-nav ms-auto">
                 <a class="nav-link" href="{% url 'MemeApp:upload' %}">📤 Завантажити</a>
                 <a class="nav-link" href="{% url 'MemeApp:gallery' %}">🏠 Головна</a>
+                {% if user.is_authenticated %}
+                    <a href="{% url 'MemeApp:profile' %}" class="nav-link">
+                        <span class="user-avatar">
+                            {% if user.userprofile.avatar_emoji %}
+                                {{ user.userprofile.avatar_emoji }}
+                            {% else %}
+                                👤
+                            {% endif %}
+                        </span>
+                        {{ user.username }}
+                    </a>
+                {% endif %}
             </div>
         </div>
     </nav>
@@ -154,7 +248,16 @@
             {% endif %}
 
             <div class="mt-4">
-                <p><strong>Автор:</strong> {{ meme.uploaded_by.username }}</p>
+                <p><strong>Автор:</strong>
+                    <span class="user-avatar">
+                        {% if meme.uploaded_by.userprofile.avatar_emoji %}
+                            {{ meme.uploaded_by.userprofile.avatar_emoji }}
+                        {% else %}
+                            👤
+                        {% endif %}
+                    </span>
+                    {{ meme.uploaded_by.username }}
+                </p>
             </div>
         </div>
 
@@ -177,7 +280,19 @@
                         </div>
                     {% endif %}
                     <p class="mt-2 mb-1">{{ related.title|truncatechars:30 }}</p>
-                    <small class="text-muted">❤️ {{ related.total_likes }} • 👁️ {{ related.views }}</small>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <small class="text-muted">
+                            <span class="user-avatar">
+                                {% if related.uploaded_by.userprofile.avatar_emoji %}
+                                    {{ related.uploaded_by.userprofile.avatar_emoji }}
+                                {% else %}
+                                    👤
+                                {% endif %}
+                            </span>
+                            {{ related.uploaded_by.username }}
+                        </small>
+                        <small class="text-muted">❤️ {{ related.total_likes }} • 👁️ {{ related.views }}</small>
+                    </div>
                 </div>
             {% empty %}
                 <p class="text-muted">Немає схожих мемів</p>
@@ -186,6 +301,30 @@
     </div>
 
     <script>
+    function createStars() {
+        const starsContainer = document.getElementById('stars');
+        const starCount = 150;
+
+        for (let i = 0; i < starCount; i++) {
+            const star = document.createElement('div');
+            star.className = 'star';
+
+            const size = Math.random() * 3 + 1;
+            star.style.width = size + 'px';
+            star.style.height = size + 'px';
+
+            star.style.left = Math.random() * 100 + '%';
+            star.style.top = Math.random() * 100 + '%';
+
+            const duration = Math.random() * 4 + 2;
+            star.style.animationDuration = duration + 's';
+
+            star.style.animationDelay = Math.random() * 5 + 's';
+
+            starsContainer.appendChild(star);
+        }
+    }
+
     // Лайки с AJAX
     document.querySelectorAll('.like-btn').forEach(button => {
         button.addEventListener('click', function(e) {
@@ -213,6 +352,24 @@
             })
             .catch(error => console.error('Error:', error));
         });
+    });
+
+    // Автозапуск видео при наведении для похожих мемов
+    document.addEventListener('DOMContentLoaded', function() {
+        const videoElements = document.querySelectorAll('.related-media');
+
+        videoElements.forEach(video => {
+            video.addEventListener('mouseenter', function() {
+                this.play();
+            });
+
+            video.addEventListener('mouseleave', function() {
+                this.pause();
+                this.currentTime = 0;
+            });
+        });
+
+        createStars();
     });
     </script>
 </body>

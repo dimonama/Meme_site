@@ -3,6 +3,7 @@ from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.models import User
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.template.context_processors import request
 from django.utils import timezone
 from django.http import JsonResponse
 from django.db.models import Count
@@ -10,6 +11,7 @@ from django.views import View
 from django.views.generic import TemplateView, ListView, DetailView
 from .models import Meme, UserProfile
 from .forms import CustomUserCreationForm, MemeUploadForm, UserProfileForm
+from django.core.paginator import Paginator
 
 
 # Головні сторінки
@@ -48,7 +50,8 @@ class RegisterView(View):
 
 class LoginView(View):
     def get(self, request):
-        return render(request, 'login.html')
+        next_url = request.GET.get('next', '')
+        return render(request, 'login.html', {'next': next_url})
 
     def post(self, request):
         username = request.POST['username']
@@ -58,10 +61,17 @@ class LoginView(View):
         if user is not None:
             login(request, user)
             messages.success(request, f'Вітаємо, {username}!')
+
+            # Перенаправление на сохраненный URL или на главную
+            next_url = request.POST.get('next', '')
+            if next_url:
+                return redirect(next_url)
             return redirect('MemeApp:home')
         else:
             messages.error(request, 'Невірне ім\'я користувача або пароль')
-        return render(request, 'login.html')
+
+        next_url = request.POST.get('next', '')
+        return render(request, 'login.html', {'next': next_url})
 
 
 class LogoutView(View):
@@ -71,6 +81,19 @@ class LogoutView(View):
         return redirect('MemeApp:home')
 
 
+class EditProfileView(LoginRequiredMixin, View):
+    def get(self, request):
+        profile = UserProfile.objects.get(user=request.user)
+        return render(request, 'Redact.html', {'user_profile': profile})
+
+    def post(self, request):
+        profile = UserProfile.objects.get(user=request.user)
+        profile.avatar_emoji = request.POST['avatar_emoji']
+        profile.save()
+        messages.success(request, 'Аватар успішно оновлено!')
+        return redirect('MemeApp:profile')
+
+
 class ProfileView(LoginRequiredMixin, View):
     def get(self, request):
         user = request.user
@@ -78,10 +101,8 @@ class ProfileView(LoginRequiredMixin, View):
 
         user_memes = Meme.objects.filter(uploaded_by=user).order_by('-uploaded_at')
         created_memes_count = user_memes.count()
-
         total_likes = sum(meme.total_likes() for meme in user_memes)
-
-        profile, created = UserProfile.objects.get_or_create(user=user)
+        profile = UserProfile.objects.get(user=user)
 
         context = {
             'created_memes_count': created_memes_count,
@@ -97,13 +118,13 @@ class GalleryView(ListView):
     model = Meme
     template_name = 'gallery.html'
     context_object_name = 'meme_list'
-    paginate_by = 12
+    paginate_by = 14
 
     def get_queryset(self):
         queryset = Meme.objects.all().order_by('-uploaded_at')
 
         meme_type = self.request.GET.get('type')
-        if meme_type:
+        if meme_type in ['image', 'video']:
             queryset = queryset.filter(meme_type=meme_type)
 
         sort_by = self.request.GET.get('sort', 'newest')
@@ -111,6 +132,8 @@ class GalleryView(ListView):
             queryset = queryset.annotate(like_count=Count('likes')).order_by('-like_count', '-uploaded_at')
         elif sort_by == 'views':
             queryset = queryset.order_by('-views', '-uploaded_at')
+        elif sort_by == 'newest':
+            queryset = queryset.order_by('-uploaded_at')
 
         return queryset
 
@@ -118,12 +141,16 @@ class GalleryView(ListView):
         context = super().get_context_data(**kwargs)
         context.update({
             'current_filter': self.request.GET.get('type'),
-            'current_sort': self.request.GET.get('sort', 'newest')
+            'current_sort': self.request.GET.get('sort', 'newest'),
+            'is_paginated': context['page_obj'].has_other_pages()
         })
         return context
 
 
 class UploadMemeView(LoginRequiredMixin, View):
+    login_url = 'MemeApp:login'
+    redirect_field_name = 'next'
+
     def get(self, request):
         form = MemeUploadForm()
         return render(request, 'upload.html', {'form': form})
@@ -160,13 +187,13 @@ class MemeDetailView(DetailView):
         context = super().get_context_data(**kwargs)
         meme = self.get_object()
 
-
         context.update({
             'related_memes': Meme.objects.filter(
                 meme_type=meme.meme_type
             ).exclude(id=meme.id).order_by('-uploaded_at')[:6]
         })
         return context
+
 
 class LikeMemeView(LoginRequiredMixin, View):
     def post(self, request, meme_id):
@@ -183,29 +210,12 @@ class LikeMemeView(LoginRequiredMixin, View):
             'liked': liked,
             'total_likes': meme.total_likes()
         })
-        return redirect('MemeApp:meme_detail', pk=meme_id)
-
-
-class DeleteProfileView(LoginRequiredMixin, View):
-    def post(self, request):
-        user = request.user
-        # Удаляем все мемы пользователя
-        Meme.objects.filter(uploaded_by=user).delete()
-        # Удаляем профиль
-        UserProfile.objects.filter(user=user).delete()
-        # Удаляем пользователя
-        user.delete()
-
-        logout(request)
-        messages.success(request, 'Ваш профіль успішно видалено')
-        return redirect('MemeApp:home')
 
 
 class DeleteMemeView(LoginRequiredMixin, View):
     def post(self, request, meme_id):
         meme = get_object_or_404(Meme, id=meme_id)
 
-        # Проверяем что пользователь является автором
         if meme.uploaded_by != request.user:
             return JsonResponse({'error': 'Недостатньо прав'}, status=403)
 
@@ -213,18 +223,3 @@ class DeleteMemeView(LoginRequiredMixin, View):
         meme.delete()
 
         return JsonResponse({'success': True})
-
-class EditProfileView(LoginRequiredMixin, View):
-    def get(self, request):
-        profile, created = UserProfile.objects.get_or_create(user=request.user)
-        form = UserProfileForm(instance=profile)
-        return render(request, 'edit_profile.html', {'form': form})
-
-    def post(self, request):
-        profile, created = UserProfile.objects.get_or_create(user=request.user)
-        form = UserProfileForm(request.POST, request.FILES, instance=profile)
-        if form.is_valid():
-            form.save()
-            messages.success(request, 'Профіль успішно оновлено!')
-            return redirect('MemeApp:profile')
-        return render(request, 'edit_profile.html', {'form': form})

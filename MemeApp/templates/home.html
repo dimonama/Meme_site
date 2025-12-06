@@ -178,6 +178,11 @@
             transform: translateY(-2px);
             box-shadow: 0 5px 15px rgba(40, 167, 69, 0.4);
         }
+
+        .user-avatar {
+            font-size: 1.2rem;
+            margin-right: 5px;
+        }
     </style>
 </head>
 <body>
@@ -191,7 +196,16 @@
 
             <div class="navbar-nav ms-auto">
                 {% if user.is_authenticated %}
-                    <a href="{% url 'MemeApp:profile' %}" class="nav-link px-3 py-2">👤 {{ user.username }}</a>
+                    <a href="{% url 'MemeApp:profile' %}" class="nav-link px-3 py-2">
+                        <span class="user-avatar">
+                            {% if user.userprofile.avatar_emoji %}
+                                {{ user.userprofile.avatar_emoji }}
+                            {% else %}
+                                👤
+                            {% endif %}
+                        </span>
+                        {{ user.username }}
+                    </a>
                     <a href="{% url 'MemeApp:logout' %}" class="nav-link px-3 py-2 text-danger">🚪 Вийти</a>
                 {% else %}
                     <a href="{% url 'MemeApp:login' %}" class="nav-link px-3 py-2">🔑 Вхід</a>
@@ -213,7 +227,7 @@
                             <p>Ти успішно ввійшов у систему.</p>
                         </div>
                     {% else %}
-                        <p class="lead mb-4">Це головна сторінка сайту з найкращими мемами.</p>
+                        <p class="lead mb-4">Це головна сторінка сайту тут показуються останні викладені меми користувачів.</p>
                     {% endif %}
 
                     <div class="d-flex flex-wrap justify-content-center mt-4">
@@ -260,7 +274,14 @@
 
                                         <div class="d-flex justify-content-between align-items-center">
                                             <small class="text-muted">
-                                                👤 {{ meme.uploaded_by.username }}
+                                                <span class="user-avatar">
+                                                    {% if meme.uploaded_by.userprofile.avatar_emoji %}
+                                                        {{ meme.uploaded_by.userprofile.avatar_emoji }}
+                                                    {% else %}
+                                                        👤
+                                                    {% endif %}
+                                                </span>
+                                                {{ meme.uploaded_by.username }}
                                             </small>
                                             <small class="text-muted">
                                                 📅 {{ meme.uploaded_at|date:"d.m.Y" }}
@@ -302,8 +323,7 @@
                         {% else %}
                             <p class="text-muted">Приєднуйся до нашої спільноти та ділися смішними мемами! 😄</p>
                             <div class="mt-3">
-                                <a href="{% url 'MemeApp:register' %}" class="btn btn-primary me-2">📝 Швидка реєстрація</a>
-                                <a href="{% url 'MemeApp:gallery' %}" class="btn btn-outline-light">🖼️ Переглянути меми</a>
+
                             </div>
                         {% endif %}
                     </div>

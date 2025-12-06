@@ -69,6 +69,6 @@ class UserProfileForm(forms.ModelForm):
     def clean_avatar(self):
         avatar = self.cleaned_data.get('avatar')
         if avatar:
-            if avatar.size > 2 * 1024 * 1024:
+            if avatar.size > 4 * 1024 * 1024:
                 raise forms.ValidationError("Розмір аватара не повинен перевищувати 2MB")
         return avatar

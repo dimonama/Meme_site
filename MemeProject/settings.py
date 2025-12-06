@@ -101,3 +101,8 @@ LOCALE_PATHS = [
 
 LOGIN_REDIRECT_URL = 'home'
 LOGOUT_REDIRECT_URL = 'home'
+# settings.py
+
+SESSION_ENGINE = 'django.contrib.sessions.backends.db'
+SESSION_COOKIE_AGE = 1209600  # 2 недели в секундах
+SESSION_SAVE_EVERY_REQUEST = True

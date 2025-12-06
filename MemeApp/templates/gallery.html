@@ -12,13 +12,67 @@
             background: linear-gradient(135deg, #0c0c0c 0%, #1a1a1a 50%, #2d2d2d 100%);
             min-height: 100vh;
             color: white;
+            overflow-x: hidden;
+            position: relative;
         }
+
+        /* --- СТИЛІ ДЛЯ ЗІРОК --- */
+        .stars {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+        }
+
+        .star {
+            position: absolute;
+            border-radius: 50%;
+            animation: twinkle linear infinite;
+        }
+
+        @keyframes twinkle {
+            0% { opacity: 0.3; background-color: #ffffff; box-shadow: 0 0 5px #ffffff; }
+            25% { opacity: 0.7; background-color: #fffacd; box-shadow: 0 0 8px #fffacd; }
+            50% { opacity: 1; background-color: #ffeb3b; box-shadow: 0 0 12px #ffeb3b, 0 0 20px #ffeb3b; }
+            75% { opacity: 0.7; background-color: #fffacd; box-shadow: 0 0 8px #fffacd; }
+            100% { opacity: 0.3; background-color: #ffffff; box-shadow: 0 0 5px #ffffff; }
+        }
+
+        /* --- СТИЛІ ДЛЯ ГІФОК З ПЕПЕ --- */
+        .pepe-gif {
+            position: fixed;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 300px;
+            height: auto;
+            z-index: 5;
+        }
+
+        .pepe-left {
+            left: 10px;
+        }
+
+        .pepe-right {
+            right: 10px;
+        }
+
+        @media (max-width: 768px) {
+            .pepe-gif {
+                display: none;
+            }
+        }
+
+        .container { background: transparent; position: relative; z-index: 10; }
+
         .meme-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
             gap: 20px;
             padding: 20px;
         }
+
         .meme-item {
             background: rgba(42, 42, 42, 0.9);
             border: 1px solid #444;
@@ -27,16 +81,20 @@
             text-align: center;
             cursor: pointer;
             transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
         }
+
         .meme-item:hover {
             transform: translateY(-5px);
             border-color: #666;
             box-shadow: 0 10px 20px rgba(0,0,0,0.3);
         }
+
         .filters, .sorting {
             text-align: center;
             padding: 20px;
         }
+
         .filters a, .sorting a {
             display: inline-block;
             margin: 0 10px;
@@ -46,27 +104,61 @@
             text-decoration: none;
             border-radius: 8px;
             transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.2);
         }
+
         .filters a:hover, .sorting a:hover {
             background: rgba(255, 255, 255, 0.2);
             transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(255, 255, 255, 0.1);
         }
+
+        /* СТИЛИ ДЛЯ ПАГИНАЦИИ */
         .pagination {
-            text-align: center;
-            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+            margin: 30px 0;
+            flex-wrap: wrap;
         }
-        .pagination a {
+
+        .pagination-link, .current-page {
             display: inline-block;
-            margin: 0 5px;
-            padding: 10px 15px;
-            background: rgba(255, 255, 255, 0.1);
-            color: white;
-            text-decoration: none;
+            padding: 10px 16px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
             border-radius: 8px;
+            text-decoration: none;
+            color: white;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.1);
+            min-width: 44px;
+            text-align: center;
         }
-        .pagination a:hover {
+
+        .pagination-link:hover {
             background: rgba(255, 255, 255, 0.2);
+            border-color: rgba(255, 255, 255, 0.5);
+            transform: translateY(-2px);
         }
+
+        .current-page {
+            background: rgba(255, 255, 255, 0.3);
+            border-color: rgba(255, 255, 255, 0.5);
+            font-weight: bold;
+        }
+
+        @media (max-width: 768px) {
+            .pagination {
+                gap: 4px;
+            }
+
+            .pagination-link, .current-page {
+                padding: 8px 12px;
+                font-size: 0.9em;
+            }
+        }
+
         .meme-placeholder {
             width: 100%;
             height: 200px;
@@ -78,6 +170,7 @@
             font-size: 3rem;
             margin-bottom: 10px;
         }
+
         .meme-media {
             width: 100%;
             height: 250px;
@@ -85,28 +178,56 @@
             border-radius: 8px;
             margin-bottom: 10px;
         }
+
         .meme-stats {
             display: flex;
             justify-content: center;
             gap: 15px;
             margin-top: 10px;
         }
+
         .meme-stats span {
             background: rgba(255, 255, 255, 0.1);
             padding: 5px 10px;
             border-radius: 15px;
             font-size: 0.9em;
         }
+
+        .nav-link {
+            background: rgba(255, 255, 255, 0.1);
+            margin: 5px;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .nav-link:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(255, 255, 255, 0.1);
+        }
     </style>
 </head>
 <body>
+
+    <div class="stars" id="stars"></div>
 
     <nav class="navbar navbar-expand-lg navbar-dark">
         <div class="container">
             <a class="navbar-brand fw-bold" href="{% url 'MemeApp:home' %}">Меню</a>
             <div class="navbar-nav ms-auto">
-                <a class="nav-link" href="{% url 'MemeApp:upload' %}">📤 Завантажити</a>
+                <a class="nav-link"
+                   href="{% if user.is_authenticated %}{% url 'MemeApp:upload' %}{% else %}{% url 'MemeApp:login' %}?next={% url 'MemeApp:upload' %}{% endif %}"
+                   onclick="{% if not user.is_authenticated %}return confirm('Для завантаження мемів потрібно увійти в систему. Перейти до сторінки входу?');{% endif %}">
+                    📤 Завантажити
+                </a>
                 <a class="nav-link" href="{% url 'MemeApp:home' %}">🏠 Головна</a>
+                {% if user.is_authenticated %}
+                    <a href="{% url 'MemeApp:profile' %}" class="nav-link">
+{{ user_profile.avatar_emoji }}
+                        {{ user.username }}
+                    </a>
+                {% endif %}
             </div>
         </div>
     </nav>
@@ -151,7 +272,10 @@
                 <span>👁️ {{ meme.views }}</span>
             </div>
 
-            <small class="text-muted">Автор: {{ meme.uploaded_by.username }}</small>
+            <small class="text-muted">
+{{ user_profile.avatar_emoji }}
+                Автор: {{ meme.uploaded_by.username }}
+            </small>
         </div>
         {% empty %}
         <div class="meme-item">
@@ -164,18 +288,54 @@
     {% if is_paginated %}
     <div class="pagination">
         {% if page_obj.has_previous %}
-            <a href="?page={{ page_obj.previous_page_number }}{% if request.GET.type %}&type={{ request.GET.type }}{% endif %}{% if request.GET.sort %}&sort={{ request.GET.sort }}{% endif %}">Попередня</a>
+            <a href="?page=1{% if request.GET.type %}&type={{ request.GET.type }}{% endif %}{% if request.GET.sort %}&sort={{ request.GET.sort }}{% endif %}" class="pagination-link">« Перша</a>
+            <a href="?page={{ page_obj.previous_page_number }}{% if request.GET.type %}&type={{ request.GET.type }}{% endif %}{% if request.GET.sort %}&sort={{ request.GET.sort }}{% endif %}" class="pagination-link">‹ Назад</a>
         {% endif %}
 
-        <span>Сторінка {{ page_obj.number }} з {{ page_obj.paginator.num_pages }}</span>
+        {% for num in page_obj.paginator.page_range %}
+            {% if num == page_obj.number %}
+                <span class="current-page">{{ num }}</span>
+            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                <a href="?page={{ num }}{% if request.GET.type %}&type={{ request.GET.type }}{% endif %}{% if request.GET.sort %}&sort={{ request.GET.sort }}{% endif %}" class="pagination-link">{{ num }}</a>
+            {% endif %}
+        {% endfor %}
 
         {% if page_obj.has_next %}
-            <a href="?page={{ page_obj.next_page_number }}{% if request.GET.type %}&type={{ request.GET.type }}{% endif %}{% if request.GET.sort %}&sort={{ request.GET.sort }}{% endif %}">Наступна</a>
+            <a href="?page={{ page_obj.next_page_number }}{% if request.GET.type %}&type={{ request.GET.type }}{% endif %}{% if request.GET.sort %}&sort={{ request.GET.sort }}{% endif %}" class="pagination-link">Далі ›</a>
+            <a href="?page={{ page_obj.paginator.num_pages }}{% if request.GET.type %}&type={{ request.GET.type }}{% endif %}{% if request.GET.sort %}&sort={{ request.GET.sort }}{% endif %}" class="pagination-link">Остання »</a>
         {% endif %}
+    </div>
+
+    <div style="text-align: center; color: rgba(255,255,255,0.7); margin: 15px 0;">
+        Меми {{ page_obj.start_index }} - {{ page_obj.end_index }} з {{ page_obj.paginator.count }}
     </div>
     {% endif %}
 
     <script>
+    function createStars() {
+        const starsContainer = document.getElementById('stars');
+        const starCount = 150;
+
+        for (let i = 0; i < starCount; i++) {
+            const star = document.createElement('div');
+            star.className = 'star';
+
+            const size = Math.random() * 3 + 1;
+            star.style.width = size + 'px';
+            star.style.height = size + 'px';
+
+            star.style.left = Math.random() * 100 + '%';
+            star.style.top = Math.random() * 100 + '%';
+
+            const duration = Math.random() * 4 + 2;
+            star.style.animationDuration = duration + 's';
+
+            star.style.animationDelay = Math.random() * 5 + 's';
+
+            starsContainer.appendChild(star);
+        }
+    }
+
     // Автозапуск видео при наведении
     document.addEventListener('DOMContentLoaded', function() {
         const videoElements = document.querySelectorAll('video.meme-media');
@@ -190,6 +350,8 @@
                 this.currentTime = 0;
             });
         });
+
+        createStars();
     });
     </script>
 </body>
