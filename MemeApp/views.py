@@ -197,20 +197,44 @@ class MemeDetailView(DetailView):
 
 class LikeMemeView(LoginRequiredMixin, View):
     def post(self, request, meme_id):
-        meme = get_object_or_404(Meme, id=meme_id)
+        print(f"=== LIKE VIEW DEBUG ===")
+        print(f"User: {request.user}")
+        print(f"User authenticated: {request.user.is_authenticated}")
+        print(f"Meme ID: {meme_id}")
+        print(f"Request headers: {dict(request.headers)}")
 
-        if request.user in meme.likes.all():
-            meme.likes.remove(request.user)
-            liked = False
-        else:
-            meme.likes.add(request.user)
-            liked = True
+        try:
+            meme = get_object_or_404(Meme, id=meme_id)
+            print(f"Meme found: {meme.title}")
 
-        return JsonResponse({
-            'liked': liked,
-            'total_likes': meme.total_likes()
-        })
+            if request.user in meme.likes.all():
+                meme.likes.remove(request.user)
+                liked = False
+                print(f"Like REMOVED for user {request.user}")
+            else:
+                meme.likes.add(request.user)
+                liked = True
+                print(f"Like ADDED for user {request.user}")
 
+            # Получаем обновленное количество лайков
+            total = meme.total_likes()
+            print(f"Total likes after: {total}")
+
+            return JsonResponse({
+                'liked': liked,
+                'total_likes': total,
+                'success': True
+            })
+
+        except Exception as e:
+            print(f"ERROR in LikeMemeView: {str(e)}")
+            import traceback
+            traceback.print_exc()
+
+            return JsonResponse({
+                'error': str(e),
+                'success': False
+            }, status=500)
 
 class DeleteMemeView(LoginRequiredMixin, View):
     def post(self, request, meme_id):

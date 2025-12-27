@@ -16,7 +16,6 @@
             position: relative;
         }
 
-        /* --- СТИЛІ ДЛЯ ЗІРОК --- */
         .stars {
             position: fixed;
             top: 0;
@@ -40,7 +39,6 @@
             100% { opacity: 0.3; background-color: #ffffff; box-shadow: 0 0 5px #ffffff; }
         }
 
-        /* --- СТИЛІ ДЛЯ ГІФОК З ПЕПЕ --- */
         .pepe-gif {
             position: fixed;
             top: 50%;
@@ -325,6 +323,23 @@
         }
     }
 
+    // Функция для получения CSRF токена из cookies
+    function getCSRFToken() {
+        let cookieValue = null;
+        const name = 'csrftoken';
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
     // Лайки с AJAX
     document.querySelectorAll('.like-btn').forEach(button => {
         button.addEventListener('click', function(e) {
@@ -332,25 +347,65 @@
             e.stopPropagation();
 
             const memeId = this.dataset.memeId;
-            const likeCount = this.querySelector('.like-count');
+            const likeUrl = `/meme/${memeId}/like/`; // Убедитесь что URL правильный!
+            const csrfToken = getCSRFToken();
 
-            fetch(`/meme/${memeId}/like/`, {
+            console.log('Отправка лайка для мема:', memeId);
+            console.log('CSRF токен:', csrfToken ? 'получен' : 'не найден');
+
+            // Показываем загрузку
+            const originalHTML = this.innerHTML;
+            this.innerHTML = '⏳';
+            this.disabled = true;
+
+            fetch(likeUrl, {
                 method: 'POST',
                 headers: {
-                    'X-CSRFToken': '{{ csrf_token }}',
+                    'X-CSRFToken': csrfToken,
+                    'Content-Type': 'application/json',
                 },
+                body: JSON.stringify({})
             })
-            .then(response => response.json())
+            .then(response => {
+                console.log('Статус ответа:', response.status);
+                if (!response.ok) {
+                    throw new Error(`HTTP ошибка: ${response.status}`);
+                }
+                return response.json();
+            })
             .then(data => {
+                console.log('Ответ сервера:', data);
+
+                // Обновляем кнопку и счетчик
+                const likeCountElement = this.querySelector('.like-count');
+
                 if (data.liked) {
-                    this.innerHTML = `❤️ <span class="like-count">${data.total_likes}</span>`;
+                    this.innerHTML = '❤️ <span class="like-count">' + data.total_likes + '</span>';
                     this.classList.add('liked');
                 } else {
-                    this.innerHTML = `🤍 <span class="like-count">${data.total_likes}</span>`;
+                    this.innerHTML = '🤍 <span class="like-count">' + data.total_likes + '</span>';
                     this.classList.remove('liked');
                 }
+
+                if (likeCountElement) {
+                    likeCountElement.textContent = data.total_likes;
+                }
             })
-            .catch(error => console.error('Error:', error));
+            .catch(error => {
+                console.error('Ошибка:', error);
+                // Восстанавливаем кнопку
+                this.innerHTML = originalHTML;
+
+                // Проверяем авторизацию
+                {% if not user.is_authenticated %}
+                    alert('Будь ласка, увійдіть в систему, щоб ставити лайки!');
+                {% else %}
+                    alert('Помилка при збереженні лайка: ' + error.message);
+                {% endif %}
+            })
+            .finally(() => {
+                this.disabled = false;
+            });
         });
     });
 
@@ -360,12 +415,16 @@
 
         videoElements.forEach(video => {
             video.addEventListener('mouseenter', function() {
-                this.play();
+                if (this.tagName === 'VIDEO') {
+                    this.play();
+                }
             });
 
             video.addEventListener('mouseleave', function() {
-                this.pause();
-                this.currentTime = 0;
+                if (this.tagName === 'VIDEO') {
+                    this.pause();
+                    this.currentTime = 0;
+                }
             });
         });
 
